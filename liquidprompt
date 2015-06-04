@@ -29,7 +29,7 @@
 # Brendan Fahy      <bmfahy@gmail.com>            # Postfix variable
 # Clément Mathieu   <clement@unportant.info>      # Bazaar support
 # David Loureiro    <david.loureiro@sysfera.com>  # Small portability fix
-# Étienne Deparis   <etienne@depar.is>            # Fossil support
+# Étienne Deparis   <etienne@depar.is>            # Fossil and Ruby virtual env support
 # Florian Le Frioux <florian@lefrioux.fr>         # Use ± mark when root in VCS dir.
 # François Schmidts <francois.schmidts@gmail.com> # Initial PROMPT_DIRTRIM support
 # Frédéric Lepied   <flepied@gmail.com>           # Python virtual env
@@ -300,6 +300,8 @@ _lp_source_config()
         LP_ENABLE_RUNTIME=${LP_ENABLE_RUNTIME:-0}
     fi
     LP_ENABLE_VIRTUALENV=${LP_ENABLE_VIRTUALENV:-1}
+    LP_ENABLE_RUBY_VENV=${LP_ENABLE_RUBY_VENV:-1}
+    LP_RUBY_RVM_PROMPT_OPTIONS="${LP_RUBY_RVM_PROMPT_OPTIONS:-"i v g s"}"
     LP_ENABLE_SCLS=${LP_ENABLE_SCLS:-1}
     LP_ENABLE_VCS_ROOT=${LP_ENABLE_VCS_ROOT:-0}
     LP_ENABLE_TITLE=${LP_ENABLE_TITLE:-0}
@@ -417,6 +419,17 @@ $_LP_ENABLE_SCREEN || $_LP_ENABLE_TMUX ; _lp_bool _LP_ENABLE_DETACHED_SESSIONS $
 if [[ "$LP_ENABLE_RUNTIME" == 1 ]] && ! $_LP_SHELL_bash; then
     echo Unfortunately, runtime printing for zsh is not yet supported. Turn LP_ENABLE_RUNTIME off in your config to hide this message.
     LP_ENABLE_RUNTIME=0
+fi
+
+LP_RUBY_VENV_CMD=
+if [[ "$LP_ENABLE_RUBY_VENV" = 1 ]] ; then
+    if command -v rvm-prompt >/dev/null ; then
+        LP_RUBY_VENV_CMD="rvm-prompt $LP_RUBY_RVM_PROMPT_OPTIONS"
+    elif command -v rbenv >/dev/null ; then
+        LP_RUBY_VENV_CMD="rbenv version | sed -e 's/ (set.*$//' -e 's/^ruby-//'"
+    else
+        LP_ENABLE_RUBY_VENV=0
+    fi
 fi
 
 # If we are running in a terminal multiplexer, brackets are colored
@@ -1565,9 +1578,19 @@ _lp_set_prompt()
 
     # Display the current Python virtual environment, if available
     if [[ "$LP_ENABLE_VIRTUALENV,$VIRTUAL_ENV" = 1,?* ]] ; then
-        LP_VENV=" [${LP_COLOR_VIRTUALENV}${VIRTUAL_ENV##*/}${NO_COL}]"
+        LP_VENV=" ${LP_BRACKET_OPEN}${LP_COLOR_VIRTUALENV}${VIRTUAL_ENV##*/}${NO_COL}${LP_BRACKET_CLOSE}"
     else
         LP_VENV=
+    fi
+
+    # Display the current Ruby environnement, if available.
+    LP_RUBY_VENV=
+    if [[ "$LP_ENABLE_RUBY_VENV" = 1 ]] ; then
+        LP_RUBY_VENV=$(eval ${LP_RUBY_VENV_CMD})
+
+        if [ -n "$LP_RUBY_VENV" ] ; then
+            LP_RUBY_VENV=" ${LP_BRACKET_OPEN}${LP_COLOR_VIRTUALENV}${LP_RUBY_VENV}${NO_COL}${LP_BRACKET_CLOSE}"
+        fi
     fi
 
     # Display the current software collections enabled, if available
@@ -1676,7 +1699,7 @@ _lp_set_prompt()
         # add user, host and permissions colon
         PS1="${PS1}${LP_BRACKET_OPEN}${LP_USER}${LP_HOST}${LP_PERM}"
 
-        PS1="${PS1}${LP_PWD}${LP_BRACKET_CLOSE}${LP_SCLS}${LP_VENV}${LP_PROXY}"
+        PS1="${PS1}${LP_PWD}${LP_BRACKET_CLOSE}${LP_SCLS}${LP_VENV}${LP_RUBY_VENV}${LP_PROXY}"
 
         # Add VCS infos
         # If root, the info has not been collected unless LP_ENABLE_VCS_ROOT
