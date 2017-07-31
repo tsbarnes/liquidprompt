@@ -69,13 +69,13 @@ Here is an overview of what Liquid Prompt is capable of displaying:
 * the runtime of the last command, if it has exceeded a certain threshold
 * the error code of the last command, if it has failed in some way
 * a smart mark at the end of the prompt:
-  * `±` for Git
-  * `☿` for Mercurial
-  * `‡` for Subversion
-  * `‡±` for Git-Subversion
-  * `⌘` for Fossil
-  * `$` or `%` for a simple user
-  * a red `#` for the root user
+  * `±` for Git,
+  * `☿` for Mercurial,
+  * `‡` for Subversion,
+  * `‡±` for Git-Subversion,
+  * `⌘` for Fossil,
+  * `$` or `%` for a simple user, in red if you have `sudo` rights,
+  * a red `#` for the root user.
 * if desired, the prompt will be replicated in your terminal window's
   title (without the colors)
 
@@ -173,6 +173,8 @@ prompt-building process:
 * `LP_ENABLE_SCREEN_TITLE`, if you want to use the prompt as your screen window's title
 * `LP_ENABLE_SSH_COLORS`, if you want different colors for hosts you SSH into
 * `LP_ENABLE_RUNTIME`, if you want to display the runtime of the last command
+* `LP_ENABLE_SUDO`, if you want the prompt mark to change color while you have password-less root access
+* `LP_ENABLE_FQDN`, if you want the display of the fully qualified domain name
 * `LP_ENABLE_TIME`, if you want to display the time at which the prompt was shown
 * `LP_TIME_ANALOG`, if you want to show the time using an analog clock instead of numeric values
 
@@ -239,6 +241,7 @@ Available features:
 * `LP_ERR` last error code
 * `LP_MARK` prompt mark
 * `LP_TITLE` the prompt as a window's title escaped sequences
+*  LP_TTYN  the terminal basename
 * `LP_BRACKET_OPEN` and `LP_BRACKET_CLOSE`, brackets enclosing the user+path part
 
 For example, if you just want to have a prompt displaying the user and the
@@ -257,7 +260,8 @@ To erase your new formatting, just bind `LP_PS1` to a null string:
 ## Themes
 
 You can change the colors and special characters of some parts of Liquid Prompt
-by sourcing your favorite theme file (`*.theme`) in the configuration file.
+by sourcing your favorite theme file (`*.theme`) in the configuration file. See
+[`liquid.theme`](liquid.theme) for an example of the default Liquid Prompt theme.
 
 ### Colors
 
@@ -284,6 +288,7 @@ Set the variable to a null string (`""`) if you do not want color.
 * Prompt mark
     * `LP_COLOR_MARK` as user
     * `LP_COLOR_MARK_ROOT` as root
+    * `LP_COLOR_MARK_SUDO` when you did `sudo` and your credentials are still cached (use `sudo -K` to revoke them)
     * `LP_MARK_PREFIX="\n"` put the prompt on the second line
 * Current user
     * `LP_COLOR_USER_LOGGED` user who logged in
@@ -329,10 +334,10 @@ Set the variable to a null string (`""`) if you do not want color.
 * `LP_MARK_STASH` (default: "+") if Git has stashed modifications
 * `LP_MARK_BRACKET_OPEN` (default: "[") marks around the main part of the prompt
 * `LP_MARK_BRACKET_CLOSE` (default: "]") marks around the main part of the prompt
+* `LP_MARK_PERM` (default: ":") colored green red or green to indicate write
+  permissions of the current directory
 * `LP_TITLE_OPEN` (default: "\e]0;") escape character opening a window's title
 * `LP_TITLE_CLOSE` (default: "\a") escape character closing a window's title
-* `LP_SCREEN_TITLE_OPEN` (default: "\033k") escape character opening screen window's title
-* `LP_SCREEN_TITLE_CLOSE` (default: "\033\134") escape character closing screen window's title
 
 
 ## Known Limitations and Bugs
@@ -343,15 +348,15 @@ version 3](LICENSE).
 * Does not display the number of commits to be pushed in Mercurial repositories.
 * Browsing very large Subversion repositories may dramatically slow down
   the display of Liquid Prompt (use `LP_DISABLED_VCS_PATH` to avoid that).
-* Subversion repositories cannot display commits to be pushed; this is a
-  limitation of the Subversion versioning model.
+* Subversion repositories cannot display commits to be pushed because
+  that's not how Subversion works
 * The proxy detection only uses the `$http_proxy` environment variable.
 * The window's title escape sequence may not work properly on some terminals
   (like `xterm-256`).
 * The analog clock requires a Unicode-aware terminal and at least a
   sufficiently complete font on your system. The [Symbola](http://users.teilar.gr/~g1951d/)
-  font, designed by Georges Douros, is known to work well.
-* Displaying the runtime currently only works with Bash.
+  font, designed by Georges Douros, is known to work well. On Debian or Ubuntu
+  install try the `fonts-symbola` or `ttf-ancient-fonts` package.
 
 
 ## Authors
